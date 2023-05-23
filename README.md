@@ -25,4 +25,3 @@ Based on that, we further design a local alignment approach to model A-V tempora
 Figure 2: Block diagrams of proposed local alignment approach: (a) Overview, (b) Within-Layer contrastive learning, (c)
 Cross-Layer contrastive learning.
 
-Code is coming soon.
