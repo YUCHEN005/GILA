@@ -22,6 +22,6 @@ Based on that, we further design a local alignment approach to model A-V tempora
 <img width="900" src="https://github.com/YUCHEN005/GILA/assets/90536618/edf6058f-8ecc-4ff1-8976-0c4e23bb8987">
 </div>
 
-Figure 2: Block diagrams of proposed local alignment approach: (a) Overview, (b) Within-Layer contrastive learning, (c)
-Cross-Layer contrastive learning.
+Figure 2: Block diagrams of proposed local alignment approach: (a) Overview, (b) Within-Layer (WL) contrastive learning, (c)
+Cross-Layer (CL) contrastive learning.
 
