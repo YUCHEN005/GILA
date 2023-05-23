@@ -10,7 +10,7 @@ This paper proposes a cross-modal global interaction and local alignment (GILA) 
 First, we build a global interaction (GI) model to capture A-V complementary relationship on modality level:
 
 <div align=center>
-<img width="825" alt="image" src="https://github.com/YUCHEN005/GILA/assets/90536618/2c3fda49-4028-4318-bfa8-590fdd7ade7b">
+<img width="815" alt="image" src="https://github.com/YUCHEN005/GILA/assets/90536618/2c3fda49-4028-4318-bfa8-590fdd7ade7b">
 </div>
 
 Figure 1: Block diagrams of proposed GILA: (a) Overall architecture, (b) Global Interaction model, (c) Iterative Refinement module.
