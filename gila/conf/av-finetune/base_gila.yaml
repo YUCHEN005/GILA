@@ -1,0 +1,255 @@
+# @package _group_
+
+common:
+  fp16: true
+  log_format: json
+  log_interval: 200
+  tensorboard_logdir: tblog
+  seed: 1337
+  user_dir: ???
+
+checkpoint:
+  save_interval: 1
+  keep_interval_updates: 1
+  no_epoch_checkpoints: true
+  best_checkpoint_metric: accuracy
+  maximize_best_checkpoint_metric: true
+
+distributed_training:
+  ddp_backend: legacy_ddp
+  find_unused_parameters: true
+  distributed_world_size: 2
+  #distributed_port: 29671
+  nprocs_per_node: 8
+
+task:
+  _name: av_hubert_pretraining
+  is_s2s: true
+  data: ???
+  label_dir: ???
+  tokenizer_bpe_model: ???
+  normalize: true  # must be consistent with pre-training
+  labels: ["wrd"]
+  single_target: true
+  fine_tuning: true
+  stack_order_audio: 4
+  tokenizer_bpe_name: sentencepiece
+  max_sample_size: 500
+  modalities: ["video","audio"]
+  image_aug: true
+  pad_audio: true
+  random_crop: false
+  noise_prob: 0.0
+  noise_snr: 0
+  noise_wav: ???
+
+dataset:
+  num_workers: 6
+  max_tokens: 1000
+  validate_after_updates: 0
+  validate_interval: 1
+  train_subset: train
+  valid_subset: valid
+
+criterion:
+  _name: label_smoothed_cross_entropy
+  report_accuracy: true
+  label_smoothing: 0.1
+  infonce: true
+  weight_lw: 0.001
+  weights_cl: [0.01, 0.08]
+  weights_cl_a3: [0.1, 10]
+  weights_cl_v0: [0.1, 10]
+  weights_cl_v3: [0.1, 10]
+  weights_cl_a0: [0.1, 10]
+  log_keys: ["prob_perplexity","code_perplexity","temp"]
+
+optimization:
+  max_update: 60000
+  lr: [0.001]
+  sentence_avg: true
+  update_freq: [1]
+
+optimizer:
+  _name: adam
+  adam_betas: (0.9,0.98)
+  adam_eps: 1e-08
+
+lr_scheduler:
+  _name: tri_stage
+  warmup_steps: 20000
+  hold_steps: 0
+  decay_steps: 40000
+  final_lr_scale: 0.05
+
+model:
+  _name: av_hubert_seq2seq
+  no_pretrained_weights: true
+  apply_mask: false
+  mask_selection: static
+  mask_length: 10
+  mask_other: 0
+  mask_prob: 0.75
+  mask_channel_selection: static
+  mask_channel_length: 64
+  mask_channel_other: 0
+  mask_channel_prob: 0.5
+  layerdrop: 0.1
+  dropout: 0.0
+  activation_dropout: 0.1
+  attention_dropout: 0.0
+  feature_grad_mult: 1.0
+  decoder_layers: 6
+  decoder_dropout: 0.1
+  decoder_attention_dropout: 0.0
+  decoder_activation_dropout: 0.1
+  freeze_finetune_updates: 0
+  share_decoder_input_output_embed: true
+  decoder_normalize_before: true
+  decoder_embed_dim: 768
+  decoder_ffn_embed_dim: 3072
+  decoder_attention_heads: 4
+  w2v_args:
+    common:
+      fp16: true
+      log_format: json
+      log_interval: 200
+      seed: 1337
+      user_dir: ???
+      empty_cache_freq: 10000
+
+    checkpoint:
+      save_interval_updates: 25000
+      keep_interval_updates: 1
+      no_epoch_checkpoints: true
+
+    distributed_training:
+      ddp_backend: legacy_ddp
+      distributed_backend: 'nccl'
+      distributed_world_size: 2
+      #distributed_port: 29671
+      nprocs_per_node: 8
+
+    task:
+      _name: av_hubert_pretraining
+      data: ???
+      label_dir: ???
+      labels: ["mfcc"]
+      label_rate: 25
+      sample_rate: 25
+      max_sample_size: 2000
+      min_sample_size: 5
+      pad_audio: false
+      random_crop: true
+      normalize: true
+      stack_order_audio: 4
+      # stack_order: 1
+      input_modality: image
+      image_aug: true
+      max_trim_sample_size: 400
+
+    dataset:
+      num_workers: 6
+      max_tokens: 1000
+      skip_invalid_size_inputs_valid_test: true
+      validate_interval: 5
+      validate_interval_updates: 10000
+
+    criterion:
+      _name: av_hubert
+      pred_masked_weight: 1.0
+      pred_nomask_weight: 1.0
+      loss_weights: [ 10, ]
+
+    optimization:
+      max_update: 400000
+      lr: [ 0.002 ]
+      clip_norm: 10.0
+
+    optimizer:
+      _name: adam
+      adam_betas: (0.9,0.98)
+      adam_eps: 1e-06
+      weight_decay: 0.01
+
+    lr_scheduler:
+      _name: polynomial_decay
+      warmup_updates: 32000
+
+    model:
+      _name: av_hubert
+      label_rate: 25
+      skip_masked: false
+      skip_nomask: false
+      modality_dropout: 0.5
+      audio_dropout: 0.5
+      modality_fuse: concat
+      selection_type: same_seq
+      masking_type: input
+      mask_prob_audio: 0.4
+      mask_length_audio: 10
+      mask_prob_image: 0.45
+      mask_length_image: 10
+      extractor_mode: default
+      # conv_feature_layers: '[(512,10,5)] + [(512,3,2)] * 4 + [(512,2,2)] * 2'
+      final_dim: 256
+      quantize_targets_audio: true
+      quantize_targets_video: true
+      encoder_layerdrop: 0.05
+      dropout_input: 0.1
+      dropout_features: 0.1
+      dropout: 0.1
+      attention_dropout: 0.1
+      feature_grad_mult: 0.1
+      untie_final_proj: false
+      activation_dropout: 0.0
+      wav_input: false
+      layer_norm_first: true
+      audio_feat_dim: 104
+      gi_model_layers: 2
+      encoder_layers: 4
+      encoder_embed_dim: 768
+      encoder_ffn_embed_dim: 3072
+      encoder_attention_heads: 12
+      layer_type: "transformer"     # ["transformer", "conformer"]
+      depthwise_conv_kernel_size: 31
+      pos_enc_type: "abs"        # ["abs", "rel_pos", "rope"]
+      attn_type: ""         # ["", "espnet"]
+
+    hydra:
+      job:
+        config:
+          override_dirname:
+            kv_sep: '-'
+            item_sep: '__'
+            exclude_keys:
+              - run
+              - task.data
+              - task.label_dir
+      run:
+        dir: ???
+      sweep:
+        dir: ???
+        subdir: ???
+
+
+hydra:
+  job:
+    config:
+      override_dirname:
+        kv_sep: '-'
+        item_sep: '__'
+        exclude_keys:
+          - run
+          - task.data
+          - task.label_dir
+          - model.w2v_path
+          - dataset.train_subset
+          - dataset.valid_subset
+          - criterion.wer_kenlm_model
+          - criterion.wer_lexicon
+  run:
+    dir: ???
+  sweep:
+    dir: ???
+    subdir: ???
